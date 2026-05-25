@@ -21,8 +21,8 @@ app = Flask(__name__)
 ENCODINGS_FILE = "encodings.pickle"
 REPORT_DIR = "attendance_reports"
 
-SENDER_EMAIL = "luuhaan204@gmail.com"
-APP_PASSWORD = "myvq xuik svqz sike"
+SENDER_EMAIL = "Youremail@gmail.com"
+APP_PASSWORD = "Your Email code"
 
 TIMETABLE = {
     "Ca Sáng (07:20 - 12:00)": ("07:20", "12:00"),
