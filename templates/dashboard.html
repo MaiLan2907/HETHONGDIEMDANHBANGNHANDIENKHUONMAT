@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard điểm danh</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f7fb;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 55% 45%;
+            gap: 20px;
+        }
+
+        .camera,
+        .panel {
+            background: white;
+            border-radius: 14px;
+            padding: 15px;
+            box-shadow: 0 0 10px #ccc;
+        }
+
+        img {
+            width: 100%;
+            border-radius: 12px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .card {
+            background: #eef4ff;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th,
+        td {
+            border-bottom: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background: #3498db;
+            color: white;
+        }
+
+        .buttons {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        a {
+            text-decoration: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            color: white;
+            margin: 5px;
+            display: inline-block;
+        }
+
+        .stop {
+            background: #e74c3c;
+        }
+
+        .report {
+            background: #2ecc71;
+        }
+
+        .message {
+            margin: 12px 0;
+            font-weight: bold;
+            color: green;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Dashboard điểm danh - {{ shift }}</h2>
+
+    <audio id="successSound" src="/static/success.mp3"></audio>
+
+    <div class="container">
+        <div class="camera">
+            <img src="/video_feed">
+        </div>
+
+        <div class="panel">
+            <div class="stats">
+                <div class="card">Tổng SV<br><b id="total">0</b></div>
+                <div class="card">Có mặt<br><b id="present">0</b></div>
+                <div class="card">Đúng giờ<br><b id="on_time">0</b></div>
+                <div class="card">Đi muộn<br><b id="late">0</b></div>
+                <div class="card">Vắng<br><b id="absent">0</b></div>
+            </div>
+
+            <div class="message" id="message">Đang chờ điểm danh...</div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã SV</th>
+                        <th>Họ tên</th>
+                        <th>Giờ</th>
+                        <th>Trạng thái</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTable"></tbody>
+            </table>
+
+            <div class="buttons">
+                <a href="/report" class="report">Xuất báo cáo</a>
+                <a href="/stop" class="stop">Dừng camera</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadAttendance() {
+            fetch("/attendance_data")
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("total").innerText = data.total;
+                    document.getElementById("present").innerText = data.present;
+                    document.getElementById("on_time").innerText = data.on_time;
+                    document.getElementById("late").innerText = data.late;
+                    document.getElementById("absent").innerText = data.absent;
+                    document.getElementById("message").innerText = data.message;
+
+                    let html = "";
+                    data.records.forEach(r => {
+                        html += `
+                    <tr>
+                        <td>${r.id}</td>
+                        <td>${r.name}</td>
+                        <td>${r.time}</td>
+                        <td>${r.status}</td>
+                        <td>${r.note}</td>
+                    </tr>
+                `;
+                    });
+
+                    document.getElementById("attendanceTable").innerHTML = html;
+                });
+        }
+
+        function checkSound() {
+            fetch("/sound_status")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.play) {
+                        document.getElementById("successSound").play();
+                    }
+                });
+        }
+
+        setInterval(loadAttendance, 1000);
+        setInterval(checkSound, 1000);
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Đăng ký khuôn mặt</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .login-box,
+        .container {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 0 10px #ccc;
+        }
+
+        .login-box {
+            width: 420px;
+            margin: 30px auto;
+        }
+
+        .container {
+            display: none;
+            grid-template-columns: 55% 45%;
+            gap: 20px;
+        }
+
+        .camera-box,
+        .form-box {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 12px;
+            background: black;
+        }
+
+        input,
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        button {
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .login {
+            background: #2563eb;
+        }
+
+        .capture {
+            background: #3498db;
+        }
+
+        .save {
+            background: #2ecc71;
+        }
+
+        .reset {
+            background: #e74c3c;
+        }
+
+        .preview {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .preview img {
+            width: 100%;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+
+        .status {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>ADMIN - ĐĂNG KÝ KHUÔN MẶT SINH VIÊN</h2>
+
+    <div class="login-box" id="loginBox">
+        <h3>Đăng nhập Admin</h3>
+
+        <input type="email" id="admin_email" placeholder="Email admin">
+        <input type="password" id="admin_password" placeholder="Mật khẩu admin">
+
+        <button class="login" onclick="checkAdmin()">Xác thực admin</button>
+
+        <div class="status" id="loginStatus"></div>
+    </div>
+
+    <div class="container" id="registerArea">
+        <div class="camera-box">
+            <video id="video" autoplay playsinline></video>
+
+            <button class="capture" onclick="captureImage()">
+                Chụp ảnh khuôn mặt
+            </button>
+
+            <button class="reset" onclick="resetImages()">
+                Chụp lại
+            </button>
+
+            <p id="countText">Đã chụp: 0 / 5 ảnh</p>
+
+            <div class="preview" id="preview"></div>
+        </div>
+
+        <div class="form-box">
+            <h3>Thông tin sinh viên</h3>
+
+            <input type="text" id="student_id" placeholder="Mã sinh viên">
+            <input type="text" id="name" placeholder="Họ tên sinh viên">
+            <input type="email" id="email" placeholder="Email sinh viên">
+
+            <button class="save" onclick="submitRegister()">
+                Lưu sinh viên
+            </button>
+
+            <div class="status" id="status"></div>
+        </div>
+    </div>
+
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const preview = document.getElementById("preview");
+        const countText = document.getElementById("countText");
+        const statusBox = document.getElementById("status");
+        const loginStatus = document.getElementById("loginStatus");
+
+        let images = [];
+        const maxImages = 5;
+        let cameraStream = null;
+        let adminVerified = false;
+
+        function checkAdmin() {
+            const formData = new FormData();
+            formData.append("admin_email", document.getElementById("admin_email").value);
+            formData.append("admin_password", document.getElementById("admin_password").value);
+
+            fetch("/motcua/check", {
+                method: "POST",
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    loginStatus.innerText = data.message;
+                    loginStatus.style.color = data.success ? "green" : "red";
+
+                    if (data.success) {
+                        adminVerified = true;
+                        document.getElementById("loginBox").style.display = "none";
+                        document.getElementById("registerArea").style.display = "grid";
+                        startCamera();
+                    }
+                })
+                .catch(() => {
+                    loginStatus.innerText = "Lỗi xác thực admin.";
+                    loginStatus.style.color = "red";
+                });
+        }
+
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    cameraStream = stream;
+                    video.srcObject = stream;
+                })
+                .catch(err => {
+                    alert("Không mở được camera: " + err);
+                });
+        }
+
+        function captureImage() {
+            if (!adminVerified) {
+                alert("Bạn cần xác thực admin trước.");
+                return;
+            }
+
+            if (images.length >= maxImages) {
+                alert("Đã chụp đủ 5 ảnh.");
+                return;
+            }
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = canvas.toDataURL("image/jpeg");
+            images.push(imageData);
+
+            const img = document.createElement("img");
+            img.src = imageData;
+            preview.appendChild(img);
+
+            countText.innerText = `Đã chụp: ${images.length} / ${maxImages} ảnh`;
+        }
+
+        function resetImages() {
+            images = [];
+            preview.innerHTML = "";
+            countText.innerText = "Đã chụp: 0 / 5 ảnh";
+            statusBox.innerText = "";
+        }
+
+        function submitRegister() {
+            if (!adminVerified) {
+                alert("Bạn cần xác thực admin trước.");
+                return;
+            }
+
+            const formData = new FormData();
+
+            formData.append("admin_email", document.getElementById("admin_email").value);
+            formData.append("admin_password", document.getElementById("admin_password").value);
+
+            formData.append("student_id", document.getElementById("student_id").value);
+            formData.append("name", document.getElementById("name").value);
+            formData.append("email", document.getElementById("email").value);
+
+            images.forEach(img => {
+                formData.append("images[]", img);
+            });
+
+            fetch("/motcua/check", {
+                method: "POST",
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    statusBox.innerText = data.message;
+                    statusBox.style.color = data.success ? "green" : "red";
+
+                    if (data.success) {
+                        resetImages();
+                        document.getElementById("student_id").value = "";
+                        document.getElementById("name").value = "";
+                        document.getElementById("email").value = "";
+                    }
+                })
+                .catch(() => {
+                    statusBox.innerText = "Lỗi gửi dữ liệu.";
+                    statusBox.style.color = "red";
+                });
+        }
+    </script>
+
+</body>
+
+</html>
