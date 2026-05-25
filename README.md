@@ -30,7 +30,7 @@ Hệ thống hỗ trợ:
 - Tự động phân loại đúng giờ / đi muộn.
 - Xuất báo cáo điểm danh và gửi email cho giảng viên.
 
-<img src="D:\MAILAN\static\Screenshot 2026-05-25 182711.png" alt="Dashboard" width="100%"/>
+<img src="static\Screenshot 2026-05-25 182711.png" alt="Dashboard" width="100%"/>
 
 ---
 
