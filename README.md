@@ -168,8 +168,4 @@ APP_PASSWORD = "your email code"
 
 ---
 
-<div align="center">
 
-**⭐ Nếu dự án hữu ích, hãy cho một ⭐ star!**
-
-</div>
