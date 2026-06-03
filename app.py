@@ -357,7 +357,14 @@ def start_attendance():
     start_dt = now.replace(hour=h_s, minute=m_s, second=0, microsecond=0)
     end_dt = now.replace(hour=h_e, minute=m_e, second=0, microsecond=0)
 
-    # Tạm thời bỏ kiểm tra thời gian để test
+    # Cho phép mở phiên từ 20 phút trước giờ bắt đầu ca đến hết ca
+    earliest_dt = start_dt - timedelta(minutes=20)
+    if now < earliest_dt:
+        return "Không được bắt đầu điểm danh sớm quá 20 phút", 400
+
+    if now > end_dt:
+        return "Không thể bắt đầu điểm danh sau khi ca học đã kết thúc", 400
+
     current_shift_name = selected
     current_start_dt = start_dt
     current_end_dt = end_dt
